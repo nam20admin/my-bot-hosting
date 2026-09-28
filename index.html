@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Bot Hosting 24/7</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-4 font-sans">
+
+    <div class="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-6">
+        
+        <!-- Header -->
+        <div class="text-center space-y-2">
+            <div class="inline-flex p-3 bg-indigo-600/20 text-indigo-400 rounded-2xl border border-indigo-500/30 mb-2">
+                <i data-lucide="server" class="w-8 h-8"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-slate-100">Discord Bot Cloud Host</h1>
+            <p class="text-xs text-slate-400">Nhập Token 1 lần - Server giữ Bot Online 24/7 (Tắt máy/Thoát tab vẫn chạy)</p>
+        </div>
+
+        <!-- Form nhập Token -->
+        <div class="space-y-4">
+            <div>
+                <label class="block text-xs font-semibold uppercase text-slate-400 mb-1">Discord Bot Token</label>
+                <div class="relative">
+                    <input type="password" id="botToken" placeholder="Dán Token bot vào đây..." 
+                        class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition">
+                    <button onclick="toggleToken()" class="absolute right-3 top-3 text-slate-500 hover:text-slate-300">
+                        <i data-lucide="eye" id="eyeIcon" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button onclick="startBotOnServer()" id="submitBtn" 
+                class="w-full bg-indigo-600 hover:bg-indigo-500 font-bold py-3.5 px-4 rounded-xl transition duration-200 shadow-lg shadow-indigo-600/25 flex items-center justify-center space-x-2 text-sm">
+                <i data-lucide="power" class="w-4 h-4"></i>
+                <span id="btnText">Kích Hoạt Bot Chạy 24/7</span>
+            </button>
+
+            <!-- Khung thông báo trạng thái -->
+            <div id="statusBox" class="hidden p-4 rounded-xl text-xs border leading-relaxed space-y-1"></div>
+        </div>
+
+        <!-- Footer -->
+        <div class="border-t border-slate-800/80 pt-4 text-center">
+            <span class="inline-flex items-center space-x-2 text-[11px] text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Máy Chủ Cloud Đang Hoạt Động</span>
+            </span>
+        </div>
+
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        function toggleToken() {
+            const input = document.getElementById('botToken');
+            const icon = document.getElementById('eyeIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.setAttribute('data-lucide', 'eye-off');
+            } else {
+                input.type = 'password';
+                icon.setAttribute('data-lucide', 'eye');
+            }
+            lucide.createIcons();
+        }
+
+        async function startBotOnServer() {
+            const token = document.getElementById('botToken').value.trim();
+            const statusBox = document.getElementById('statusBox');
+            const submitBtn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+
+            if (!token) {
+                showStatus('Vui lòng điền Discord Bot Token!', 'error');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            btnText.innerText = "Đang gửi lên Server...";
+            showStatus('Đang khởi tạo kết nối trên máy chủ Cloud...', 'info');
+
+            try {
+                const res = await fetch('/api/start-bot', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    showStatus(data.message, 'success');
+                } else {
+                    showStatus(data.message, 'error');
+                }
+            } catch (err) {
+                showStatus('Lỗi kết nối tới Server Máy Chủ Backend!', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                btnText.innerText = "Kích Hoạt Bot Chạy 24/7";
+            }
+        }
+
+        function showStatus(text, type) {
+            const statusBox = document.getElementById('statusBox');
+            statusBox.classList.remove('hidden', 'bg-red-950/80', 'border-red-800', 'text-red-300', 'bg-emerald-950/80', 'border-emerald-800', 'text-emerald-300', 'bg-blue-950/80', 'border-blue-800', 'text-blue-300');
+            
+            if (type === 'error') {
+                statusBox.classList.add('bg-red-950/80', 'border-red-800', 'text-red-300');
+            } else if (type === 'success') {
+                statusBox.classList.add('bg-emerald-950/80', 'border-emerald-800', 'text-emerald-300');
+            } else {
+                statusBox.classList.add('bg-blue-950/80', 'border-blue-800', 'text-blue-300');
+            }
+
+            statusBox.innerText = text;
+        }
+    </script>
+</body>
+</html>
